@@ -315,4 +315,4 @@ Sau khi trích xuất xong, chạy lại lệnh ở **Luồng 1** để máy ch�
 Dự án được phát triển phục vụ mục đích học tập, nghiên cứu và xây dựng hồ sơ năng lực kỹ sư phần mềm / AI.
 
 * **Tác giả:** Bùi Mạnh Huy
-* **GitHub / LinkedIn / Email:** *`[Cập nhật thông tin liên hệ của bạn tại đây]`*
+- **Liên hệ:** [GitHub](https://github.com/buimanhhuy0101-create) | [Email](mailto:buimanhhuy0101@gmail.com)
