@@ -1,0 +1,81 @@
+==============================================================================
+
+AI Fashion Search — Git Ignore Rules
+
+==============================================================================
+
+1. Môi trường ảo Python (Virtual Environments)
+
+env_web/
+venv/
+.venv/
+ENV/
+env/
+
+2. Dữ liệu, Vector Database & Trọng số Mô hình AI (Quá nặng cho GitHub)
+
+data/
+clip_model/
+translator_model/
+local_models/
+*.pkl
+*.bak
+*.tmp
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.h5
+
+3. Django & Database cục bộ
+
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+*.log
+
+4. Python Bytecode & Cache
+
+pycache/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+5. Biến môi trường & Thông tin nhạy cảm
+
+.env
+.env.*
+!.env.example
+
+6. Tệp nháp, IDE & Hệ điều hành
+
+README.txt
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini

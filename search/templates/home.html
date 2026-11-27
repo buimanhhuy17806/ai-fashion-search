@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang chủ - AI Fashion Store{% endblock %}
+
+{% block header_search %}<div class="hidden flex-1 md:block"></div>{% endblock %}
+
+{% block content %}
+<!-- HERO: tìm bằng chữ hoặc thả ảnh -->
+<section class="mx-auto max-w-7xl px-4 pb-8 pt-10 md:pt-16">
+    <form id="hero-form" data-search action="{% url 'search' %}" method="POST" enctype="multipart/form-data"
+          class="grid gap-10 lg:grid-cols-12 lg:items-stretch">
+        {% csrf_token %}
+
+        <div class="flex flex-col justify-center lg:col-span-7">
+            <h1 class="text-balance font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+                Mô tả hoặc gửi ảnh, AI tìm món đồ giống nhất.
+            </h1>
+            <p class="mt-5 max-w-xl text-lg text-stone">
+                Hệ thống so khớp với {{ total_products }} sản phẩm trong vài giây. Bạn có thể gõ tiếng Việt, AI sẽ tự dịch.
+            </p>
+
+            <div class="mt-8 flex items-center rounded-2xl bg-white p-1.5 ring-1 ring-line focus-within:ring-2 focus-within:ring-cobalt">
+                <input type="text" name="q" placeholder="Ví dụ: váy hoa dài tay"
+                       class="min-w-0 flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-stone">
+                <button type="submit" class="rounded-xl bg-ink px-6 py-3 font-medium text-white transition hover:bg-cobalt">Tìm kiếm</button>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                <span class="text-stone">Thử tìm:</span>
+                <button type="submit" name="q" value="Áo thun" class="rounded-full px-3 py-1.5 ring-1 ring-line transition hover:bg-white">Áo thun</button>
+                <button type="submit" name="q" value="Váy hoa" class="rounded-full px-3 py-1.5 ring-1 ring-line transition hover:bg-white">Váy hoa</button>
+                <button type="submit" name="q" value="Giày thể thao" class="rounded-full px-3 py-1.5 ring-1 ring-line transition hover:bg-white">Giày thể thao</button>
+                <button type="submit" name="q" value="Quần jean" class="rounded-full px-3 py-1.5 ring-1 ring-line transition hover:bg-white">Quần jean</button>
+            </div>
+        </div>
+
+        <!-- Vùng thả ảnh -->
+        <div class="lg:col-span-5">
+            <!-- Input ẩn nhận ảnh Base64 từ bảng cắt -->
+            <input type="hidden" name="cropped_image">
+
+            <!-- Không tự gửi form: chọn ảnh -> mở bảng cắt -> hiện ảnh nhỏ -> bấm "Tìm kiếm" -->
+            <input type="file" name="image" id="hero-image" accept="image/png, image/jpeg" class="sr-only">
+
+            <label for="hero-image" id="dropzone"
+                   class="flex min-h-[340px] h-full cursor-pointer flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-line bg-white p-8 text-center transition hover:border-cobalt">
+                <!-- Trạng thái chưa có ảnh -->
+                <div id="dz-empty" class="flex flex-col items-center gap-4">
+                    <span class="flex h-16 w-16 items-center justify-center rounded-full bg-mist text-2xl text-cobalt">
+                        <i class="fa-solid fa-camera"></i>
+                    </span>
+                    <span class="font-display text-2xl font-semibold">Thả ảnh vào đây</span>
+                    <span class="text-sm text-stone">hoặc bấm để chọn ảnh JPG, PNG từ máy của bạn</span>
+                </div>
+
+                <!-- Trạng thái đã chọn ảnh (hiện ảnh đã cắt thay cho chữ ở trên) -->
+                <div id="dz-filled" class="hidden w-full flex-col items-center gap-3">
+                    <div class="relative">
+                        <img id="dz-image" alt="Ảnh đã chọn" class="max-h-64 max-w-full rounded-2xl object-contain ring-1 ring-line">
+                        <button type="button" data-crop-remove aria-label="Bỏ ảnh"
+                                class="absolute -right-3 -top-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white shadow transition hover:bg-cobalt">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <span class="text-sm font-medium text-ink">Đã chọn ảnh. Nhập thêm mô tả rồi bấm "Tìm kiếm" để tìm lai.</span>
+                    <span class="text-xs text-stone">Bấm vào đây để đổi ảnh khác</span>
+                </div>
+            </label>
+        </div>
+    </form>
+</section>
+
+<!-- MUA SẮM THEO DANH MỤC -->
+{% if category_tiles %}
+<section class="mx-auto max-w-7xl px-4 py-8">
+    <h2 class="mb-6 font-display text-3xl font-bold tracking-tight">Mua sắm theo danh mục</h2>
+    <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
+        {% for tile in category_tiles %}
+        <a href="{{ tile.url }}" class="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-white ring-1 ring-line">
+            <img src="{{ tile.product.image_url }}" alt="" loading="lazy" class="h-full w-full object-cover">
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/85 to-transparent p-4 pt-12 text-white">
+                <p class="font-display text-lg font-semibold">{{ tile.label }}</p>
+                <p class="text-xs text-white/80">{{ tile.count }} sản phẩm <i class="fa-solid fa-arrow-right ml-1 transition group-hover:translate-x-1"></i></p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- GỢI Ý -->
+<section id="trending" class="mx-auto max-w-7xl px-4 py-12">
+    <div class="mb-8 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <h2 class="font-display text-3xl font-bold tracking-tight">Gợi ý cho bạn</h2>
+        <p class="text-stone">Chọn ngẫu nhiên từ kho {{ total_products }} sản phẩm</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+        {% for item in products %}
+            {% include 'product_card.html' with item=item %}
+        {% empty %}
+            <p class="col-span-full text-stone">Chưa có sản phẩm nào để hiển thị.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<script>
+    (function () {
+        var zone = document.getElementById('dropzone');
+        var input = document.getElementById('hero-image');
+        var on = ['border-cobalt', 'bg-mist'];
+
+        ['dragenter', 'dragover'].forEach(function (t) {
+            zone.addEventListener(t, function (e) {
+                e.preventDefault();
+                zone.classList.add.apply(zone.classList, on);
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(function (t) {
+            zone.addEventListener(t, function (e) {
+                e.preventDefault();
+                zone.classList.remove.apply(zone.classList, on);
+            });
+        });
+
+        // Đổi giao diện dropzone theo ảnh đã cắt (sự kiện 'cropchange' phát ra từ base.html)
+        var form = document.getElementById('hero-form');
+        var empty = document.getElementById('dz-empty');
+        var filled = document.getElementById('dz-filled');
+        var img = document.getElementById('dz-image');
+        form.addEventListener('cropchange', function (e) {
+            var url = e.detail;
+            if (url) {
+                img.src = url;
+                empty.classList.add('hidden');
+                filled.classList.remove('hidden'); filled.classList.add('flex');
+            } else {
+                img.removeAttribute('src');
+                filled.classList.add('hidden'); filled.classList.remove('flex');
+                empty.classList.remove('hidden');
+            }
+        });
+
+        zone.addEventListener('drop', function (e) {
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                input.files = e.dataTransfer.files;
+
+                // Không tự submit: kích hoạt 'change' để script ở base.html mở bảng cắt ảnh
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    })();
+</script>
+{% endblock %}

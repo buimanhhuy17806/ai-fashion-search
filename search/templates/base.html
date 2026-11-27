@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Fashion Store{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                fontFamily: {
+                    display: ['"Bricolage Grotesque"', 'sans-serif'],
+                    sans: ['"DM Sans"', 'sans-serif']
+                },
+                colors: {
+                    paper: '#F3F4F1', ink: '#16202A', stone: '#6B7480',
+                    line: '#DADDD8', cobalt: '#2E45E8', mist: '#E7EAFB'
+                }
+            } }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Thư viện Cropper.js -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <style>
+        :focus-visible { outline: 2px solid #2E45E8; outline-offset: 2px; }
+    </style>
+</head>
+<body class="bg-paper font-sans text-ink antialiased">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 border-b border-line bg-paper/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+
+            <a href="{% url 'home' %}" class="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ink text-sm text-white">AI</span>
+                Fashion
+            </a>
+
+            <!-- Thanh tìm kiếm -->
+            {% block header_search %}
+            <form id="search-form" data-search action="{% url 'search' %}" method="POST" enctype="multipart/form-data"
+                  class="order-3 flex w-full items-center rounded-full bg-white ring-1 ring-line transition focus-within:ring-2 focus-within:ring-cobalt md:order-none md:w-auto md:flex-1">
+                {% csrf_token %}
+
+                <!-- Ảnh nhỏ hiện sau khi cắt xong (bấm kính lúp mới tìm) -->
+                <div data-crop-preview class="hidden items-center gap-1.5 pl-3">
+                    <img data-crop-thumb alt="Ảnh đã chọn" class="h-8 w-8 rounded-lg object-cover ring-1 ring-line">
+                    <button type="button" data-crop-remove aria-label="Bỏ ảnh" class="text-stone transition hover:text-ink">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <input type="text" name="q" placeholder="Mô tả món đồ, ví dụ: áo thun trắng oversize"
+                       class="min-w-0 flex-1 bg-transparent py-2.5 pl-5 pr-2 text-sm outline-none placeholder:text-stone">
+
+                <!-- Input ẩn nhận ảnh cắt Base64 -->
+                <input type="hidden" name="cropped_image" id="cropped_image_data">
+
+                <input type="file" name="image" id="image-upload" accept="image/png, image/jpeg" class="hidden">
+                <button type="button" onclick="document.getElementById('image-upload').click();"
+                        class="flex items-center gap-2 px-3 py-2 text-sm text-stone transition hover:text-ink" title="Tìm bằng hình ảnh">
+                    <i class="fa-solid fa-camera"></i><span class="hidden sm:inline">Tìm bằng ảnh</span>
+                </button>
+                <button type="submit" aria-label="Tìm kiếm"
+                        class="m-1 flex h-9 w-11 items-center justify-center rounded-full bg-ink text-white transition hover:bg-cobalt">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+            {% endblock %}
+
+            <div class="ml-auto flex items-center gap-5 text-lg text-stone md:ml-0">
+                <a href="#" aria-label="Tài khoản" class="transition hover:text-ink"><i class="fa-regular fa-user"></i></a>
+                <a href="#" aria-label="Giỏ hàng" class="transition hover:text-ink"><i class="fa-solid fa-bag-shopping"></i></a>
+            </div>
+        </div>
+
+        <!-- DANH MỤC SẢN PHẨM -->
+        {% if nav_groups %}
+        <nav class="border-t border-line" aria-label="Danh mục sản phẩm">
+            <ul class="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-3 text-sm font-medium md:overflow-visible">
+                <li><a href="{% url 'category' %}" class="block whitespace-nowrap px-3 py-2.5 transition hover:text-cobalt">Tất cả</a></li>
+                {% for group in nav_groups %}
+                <li class="group relative">
+                    <a href="{{ group.url }}" class="block whitespace-nowrap px-3 py-2.5 transition hover:text-cobalt">{{ group.label }}</a>
+                    {% if group.children %}
+                    <div class="invisible absolute left-0 top-full z-50 hidden w-60 pt-0 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 md:block">
+                        <ul class="rounded-b-2xl bg-white p-2 shadow-lg ring-1 ring-line">
+                            {% for child in group.children %}
+                            <li>
+                                <a href="{{ child.url }}" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm font-normal transition hover:bg-mist hover:text-cobalt">
+                                    {{ child.label }}<span class="text-xs text-stone">{{ child.count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+        {% endif %}
+    </header>
+
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-20 bg-ink py-10 text-sm text-white/70">
+        <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 md:flex-row md:items-center md:justify-between">
+            <p class="font-display text-lg font-semibold text-white">AI Fashion</p>
+            <p>&copy; 2026 AI Fashion Search. Đồ án xây dựng hệ thống tìm kiếm tương đồng.</p>
+        </div>
+    </footer>
+
+    <!-- MODAL CẮT ẢNH CROPPER.JS -->
+    <div id="cropper-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-ink/80 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 class="mb-4 font-display text-xl font-bold text-ink">Khoanh vùng sản phẩm cần tìm</h3>
+
+            <div class="h-[60vh] w-full overflow-hidden rounded-xl bg-mist">
+                <img id="cropper-image" src="" alt="Ảnh cần cắt" class="block max-w-full">
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" id="cancel-crop" class="rounded-lg bg-gray-200 px-5 py-2.5 font-medium text-stone transition hover:bg-gray-300">Hủy bỏ</button>
+                <button type="button" id="submit-crop" class="rounded-lg bg-cobalt px-5 py-2.5 font-medium text-white shadow-md transition hover:bg-blue-700">
+                    <i class="fa-solid fa-crop-simple mr-2"></i>Xác nhận vùng cắt
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình chờ khi AI đang xử lý -->
+    <div id="loading" role="status" aria-live="polite"
+         class="fixed inset-0 z-[60] hidden items-center justify-center bg-paper/85 backdrop-blur-sm">
+        <div class="flex flex-col items-center gap-4">
+            <i class="fa-solid fa-circle-notch animate-spin text-3xl text-cobalt motion-reduce:animate-none"></i>
+            <p class="font-display text-lg font-semibold">AI đang phân tích và tìm sản phẩm...</p>
+        </div>
+    </div>
+
+    <script>
+        function showLoading() {
+            var el = document.getElementById('loading');
+            el.classList.remove('hidden'); el.classList.add('flex');
+        }
+
+        // 1. Hiện màn hình chờ khi form submit
+        document.querySelectorAll('form[data-search]').forEach(function (f) {
+            f.addEventListener('submit', showLoading);
+        });
+
+        // 2. Ẩn màn hình chờ khi Back lại trang
+        window.addEventListener('pageshow', function () {
+            var el = document.getElementById('loading');
+            el.classList.add('hidden'); el.classList.remove('flex');
+        });
+
+        // 3. Cắt ảnh (Cropper.js): cắt xong chỉ hiện ảnh nhỏ, bấm nút tìm kiếm mới gửi form
+        document.addEventListener('DOMContentLoaded', function () {
+            var modal = document.getElementById('cropper-modal');
+            var cropperImg = document.getElementById('cropper-image');
+            var cropper = null, currentForm = null, currentFileInput = null;
+
+            function closeModal() {
+                modal.classList.remove('flex'); modal.classList.add('hidden');
+                if (cropper) { cropper.destroy(); cropper = null; }
+            }
+
+            // Hiện/ẩn ảnh nhỏ trong form (dataUrl rỗng = ẩn)
+            function setPreview(form, dataUrl) {
+                // Báo cho trang (vd: dropzone ở trang chủ) biết ảnh vừa đổi
+                form.dispatchEvent(new CustomEvent('cropchange', { detail: dataUrl }));
+                var box = form.querySelector('[data-crop-preview]');
+                if (!box) return;
+                var thumb = box.querySelector('[data-crop-thumb]');
+                if (dataUrl) {
+                    thumb.src = dataUrl;
+                    box.classList.remove('hidden'); box.classList.add('flex');
+                } else {
+                    thumb.removeAttribute('src');
+                    box.classList.add('hidden'); box.classList.remove('flex');
+                }
+            }
+
+            function clearCropped(form) {
+                var hidden = form.querySelector('input[name="cropped_image"]');
+                if (hidden) hidden.value = '';
+                setPreview(form, '');
+            }
+
+            // Chọn file -> mở bảng cắt
+            document.querySelectorAll('input[type="file"][name="image"]').forEach(function (fileInput) {
+                fileInput.addEventListener('change', function () {
+                    if (!this.files || !this.files.length) return;
+                    currentFileInput = this;
+                    currentForm = this.closest('form');
+
+                    var reader = new FileReader();
+                    reader.onload = function (ev) {
+                        cropperImg.src = ev.target.result;
+                        modal.classList.remove('hidden'); modal.classList.add('flex');
+                        if (cropper) cropper.destroy();
+                        cropper = new Cropper(cropperImg, { viewMode: 2, autoCropArea: 0.8, background: false, guides: true });
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                });
+            });
+
+            // Hủy: bỏ ảnh vừa chọn
+            document.getElementById('cancel-crop').addEventListener('click', function () {
+                if (currentFileInput) currentFileInput.value = '';
+                closeModal();
+            });
+
+            // Xác nhận cắt: lưu Base64 + hiện ảnh nhỏ, KHÔNG gửi form
+            document.getElementById('submit-crop').addEventListener('click', function () {
+                if (!cropper || !currentForm) return;
+                var dataUrl = cropper.getCroppedCanvas({ maxWidth: 1024, maxHeight: 1024 }).toDataURL('image/jpeg', 0.9);
+
+                var hidden = currentForm.querySelector('input[name="cropped_image"]');
+                if (hidden) hidden.value = dataUrl;
+                currentFileInput.value = '';   // server chỉ đọc ảnh từ ô Base64
+                setPreview(currentForm, dataUrl);
+                closeModal();
+            });
+
+            // Nút "x": bỏ ảnh đã cắt
+            document.querySelectorAll('[data-crop-remove]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault(); e.stopPropagation();   // nút nằm trong <label>, tránh mở hộp chọn file
+                    clearCropped(this.closest('form'));
+                });
+            });
+        });
+    </script>
+</body>
+</html>

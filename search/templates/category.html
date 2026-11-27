@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if type_label %}{{ type_label }}{% elif group %}{{ group.label }}{% else %}Tất cả sản phẩm{% endif %} - AI Fashion Store{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-4 py-8">
+
+    <nav class="mb-4 text-sm text-stone" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}" class="hover:text-ink">Trang chủ</a>
+        <span class="mx-2">/</span>
+        {% if type_label %}
+            <a href="{{ group_url }}" class="hover:text-ink">{% if group %}{{ group.label }}{% else %}Tất cả{% endif %}</a>
+            <span class="mx-2">/</span><span class="text-ink">{{ type_label }}</span>
+        {% else %}
+            <span class="text-ink">{% if group %}{{ group.label }}{% else %}Tất cả sản phẩm{% endif %}</span>
+        {% endif %}
+    </nav>
+
+    <div class="mb-8 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <h1 class="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            {% if type_label %}{{ type_label }}{% elif group %}{{ group.label }}{% else %}Tất cả sản phẩm{% endif %}
+        </h1>
+        <p class="text-stone">{{ total }} sản phẩm</p>
+    </div>
+
+    <div class="grid gap-8 lg:grid-cols-[15rem_1fr]">
+
+        <!-- BỘ LỌC -->
+        <aside>
+            <details id="filters" class="rounded-2xl bg-white ring-1 ring-line">
+                <summary class="cursor-pointer list-none px-4 py-3 text-sm font-medium lg:hidden">
+                    <i class="fa-solid fa-sliders mr-2"></i>Bộ lọc
+                </summary>
+                <div class="space-y-6 p-4 lg:pt-4">
+                    <div>
+                        <h2 class="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-stone">Loại sản phẩm</h2>
+                        <ul class="max-h-72 space-y-0.5 overflow-y-auto pr-1">
+                            {% for item in types %}
+                            <li>
+                                <a href="{{ item.url }}" {% if item.active %}aria-current="true"{% endif %}
+                                   class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm transition hover:bg-mist {% if item.active %}bg-mist font-medium text-cobalt{% endif %}">
+                                    {{ item.label }}<span class="text-xs text-stone">{{ item.count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 class="mb-2 font-display text-sm font-semibold uppercase tracking-wide text-stone">Màu sắc</h2>
+                        <ul class="max-h-72 space-y-0.5 overflow-y-auto pr-1">
+                            {% for item in colours %}
+                            <li>
+                                <a href="{{ item.url }}" {% if item.active %}aria-current="true"{% endif %}
+                                   class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition hover:bg-mist {% if item.active %}bg-mist font-medium text-cobalt{% endif %}">
+                                    <span class="h-4 w-4 shrink-0 rounded-full ring-1 ring-ink/20" style="background: {{ item.hex }}"></span>
+                                    <span class="flex-1">{{ item.label }}</span>
+                                    <span class="text-xs text-stone">{{ item.count }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </details>
+        </aside>
+
+        <!-- KẾT QUẢ -->
+        <section>
+            {% if type_key or colour_key %}
+            <div class="mb-5 flex flex-wrap items-center gap-2 text-sm">
+                <span class="text-stone">Đang lọc:</span>
+                {% if type_key %}
+                <a href="{{ clear_type_url }}" class="rounded-full bg-ink px-3 py-1 text-white transition hover:bg-cobalt">{{ type_label }} <i class="fa-solid fa-xmark ml-1"></i></a>
+                {% endif %}
+                {% if colour_key %}
+                <a href="{{ clear_colour_url }}" class="rounded-full bg-ink px-3 py-1 text-white transition hover:bg-cobalt">{{ colour_label }} <i class="fa-solid fa-xmark ml-1"></i></a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if products %}
+            <div class="grid grid-cols-2 gap-x-5 gap-y-8 md:grid-cols-3 xl:grid-cols-4">
+                {% for item in products %}
+                    {% include 'product_card.html' with item=item %}
+                {% endfor %}
+            </div>
+
+            {% if page.paginator.num_pages > 1 %}
+            <nav class="mt-12 flex items-center justify-center gap-4 text-sm" aria-label="Phân trang">
+                {% if page.has_previous %}
+                <a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.previous_page_number }}" class="rounded-xl px-4 py-2 ring-1 ring-line transition hover:bg-white"><i class="fa-solid fa-arrow-left mr-2"></i>Trước</a>
+                {% endif %}
+                <span class="text-stone">Trang {{ page.number }} / {{ page.paginator.num_pages }}</span>
+                {% if page.has_next %}
+                <a href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.next_page_number }}" class="rounded-xl px-4 py-2 ring-1 ring-line transition hover:bg-white">Sau<i class="fa-solid fa-arrow-right ml-2"></i></a>
+                {% endif %}
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="rounded-2xl bg-white p-8 text-center ring-1 ring-line">
+                <p class="font-medium">Không có sản phẩm nào khớp bộ lọc này.</p>
+                <a href="{{ group_url }}" class="mt-3 inline-block text-sm text-cobalt hover:underline">Xóa bộ lọc</a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<script>
+    // Trên màn hình lớn luôn mở sẵn bộ lọc; trên điện thoại thu gọn
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+        document.getElementById('filters').open = true;
+    }
+</script>
+{% endblock %}
